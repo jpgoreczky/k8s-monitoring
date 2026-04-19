@@ -40,11 +40,10 @@ spec:
 
     - alert: ContainerHighCPUUsage
       expr: |
-        (rate(container_cpu_usage_seconds_total{container!=""}[5m]) /
-        container_spec_cpu_quota{container!=""} *
-        container_spec_cpu_period{container!=""}) * 100 > 80
-      for: 5m
+        rate(container_cpu_usage_seconds_total{pod=~"backend.*"}[5m]) > 0.2
+      for: 1m
       labels:
         severity: warning
       annotations:
-        summary: "Container {{ $labels.container }} CPU above 80%"
+        summary: "Backend pod CPU usage is high"
+        description: "Backend pod is using more than 80% of its 250m CPU limit"
