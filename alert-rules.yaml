@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: custom-alerts
+  namespace: monitoring
+  labels:
+    release: prometheus-stack
+spec:
+  groups:
+  - name: service-degradation
+    rules:
+    - alert: PodCrashLooping
+      expr: rate(kube_pod_container_status_restarts_total[15m]) * 60 * 15 > 3
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Pod {{ $labels.pod }} is crash looping"
+        description: "Pod has restarted more than 3 times in 15 minutes"
+
+    - alert: FrequentContainerRestarts
+      expr: kube_pod_container_status_restarts_total > 3
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container {{ $labels.container }} has restarted frequently"
+
+  - name: resource-exhaustion
+    rules:
+    - alert: ContainerHighMemoryUsage
+      expr: |
+        (container_memory_usage_bytes{container!=""} /
+        container_spec_memory_limit_bytes{container!=""}) * 100 > 90
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container {{ $labels.container }} memory above 90%"
+
+    - alert: ContainerHighCPUUsage
+      expr: |
+        (rate(container_cpu_usage_seconds_total{container!=""}[5m]) /
+        container_spec_cpu_quota{container!=""} *
+        container_spec_cpu_period{container!=""}) * 100 > 80
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "Container {{ $labels.container }} CPU above 80%"
