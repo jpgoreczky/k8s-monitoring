@@ -1,0 +1,12 @@
+# Minikube local files
+.minikube/
+
+# Helm generated files
+*.lock
+
+# Kubernetes secrets
+*.secret.yaml
+
+# OS files
+.DS_Store
+Thumbs.db
